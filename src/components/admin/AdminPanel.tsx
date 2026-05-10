@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { usePosStore, useSharedStore, fmtCZK } from '@/store/posStore';
 import type { Product, Category, Variation } from '@/types';
 import { setupPrinter, isPrinterReady } from '@/utils/hardware';
+import { uploadProductPhoto, uploadLogo, deleteProductPhoto } from '@/firebase/config';
 
 type AdminTab = 'katalog' | 'kategorie' | 'prehled' | 'nastaveni';
 
@@ -54,6 +55,7 @@ const AdminKatalog: React.FC = () => {
   const [form, setForm]       = useState<Partial<Product>>({});
   const [filterCat, setFilterCat] = useState('all');
   const [imgPreview, setImgPreview] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const filtered = filterCat === 'all' ? catalog : catalog.filter(p => p.cat === filterCat);
@@ -80,18 +82,25 @@ const AdminKatalog: React.FC = () => {
     setImgPreview(null);
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = ev => {
-      const dataUrl = ev.target?.result as string;
-      setImgPreview(dataUrl);
-    };
-    reader.readAsDataURL(file);
+    if (!file || !form.id) return;
+    if (file.size > 5_000_000) { alert('Max 5 MB'); return; }
+    setUploading(true);
+    try {
+      const url = await uploadProductPhoto(form.id, file);
+      setImgPreview(url);
+    } catch (err) {
+      alert('Chyba uploadu: ' + (err as Error).message);
+    } finally {
+      setUploading(false);
+    }
   };
 
-  const removeImage = () => {
+  const removeImage = async () => {
+    if (form.id) {
+      try { await deleteProductPhoto(form.id); } catch {}
+    }
     setImgPreview(null);
     if (fileRef.current) fileRef.current.value = '';
   };
@@ -100,7 +109,7 @@ const AdminKatalog: React.FC = () => {
     if (!form.name?.trim() || !form.variations?.length) return;
     const prodId = form.id!;
 
-    // Save image
+    // Foto je URL z Firebase Storage — uložíme do photos map
     const newPhotos = { ...photos };
     if (imgPreview) {
       newPhotos[prodId] = imgPreview;
@@ -179,20 +188,24 @@ const AdminKatalog: React.FC = () => {
           {/* Image upload */}
           <div style={{ display: 'flex', gap: 14, alignItems: 'center', marginBottom: 14, background: 'var(--bg-3)', border: '1px solid var(--line)', borderRadius: 12, padding: 12 }}>
             <div
-              style={{ width: 80, height: 80, borderRadius: 10, overflow: 'hidden', background: form.color || '#8a6a3a', border: '2px solid var(--line)', display: 'grid', placeItems: 'center', flexShrink: 0, cursor: 'pointer' }}
-              onClick={() => fileRef.current?.click()}
+              style={{ width: 80, height: 80, borderRadius: 10, overflow: 'hidden', background: form.color || '#8a6a3a', border: '2px solid var(--line)', display: 'grid', placeItems: 'center', flexShrink: 0, cursor: uploading ? 'wait' : 'pointer', opacity: uploading ? 0.6 : 1 }}
+              onClick={() => !uploading && fileRef.current?.click()}
               title="Klikni pro nahrání obrázku"
             >
-              {imgPreview
-                ? <img src={imgPreview} alt="preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                : <span style={{ fontSize: 36 }}>{form.icon}</span>
+              {uploading
+                ? <span style={{ fontSize: 28 }}>⏳</span>
+                : imgPreview
+                  ? <img src={imgPreview} alt="preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  : <span style={{ fontSize: 36 }}>{form.icon}</span>
               }
             </div>
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 12, color: 'var(--ink-mute)', marginBottom: 8 }}>Obrázek dlaždice (JPG, PNG, WebP — max 2 MB)</div>
+              <div style={{ fontSize: 12, color: 'var(--ink-mute)', marginBottom: 8 }}>
+                {uploading ? '⏳ Nahrávám do cloudu...' : 'Obrázek dlaždice (JPG, PNG, WebP — max 5 MB)'}
+              </div>
               <div style={{ display: 'flex', gap: 8 }}>
-                <button className="btn" style={{ fontSize: 12 }} onClick={() => fileRef.current?.click()}>📁 Nahrát obrázek</button>
-                {imgPreview && <button className="btn danger" style={{ fontSize: 12 }} onClick={removeImage}>✕ Odebrat</button>}
+                <button className="btn" style={{ fontSize: 12 }} onClick={() => fileRef.current?.click()} disabled={uploading}>📁 Nahrát obrázek</button>
+                {imgPreview && <button className="btn danger" style={{ fontSize: 12 }} onClick={removeImage} disabled={uploading}>✕ Odebrat</button>}
               </div>
               <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleImageUpload} />
             </div>
@@ -368,6 +381,7 @@ const AdminNastaveni: React.FC = () => {
   const [bizForm, setBizForm] = useState({ ...shared.business });
   const [saved, setSaved]     = useState(false);
   const [printerReady, setPrinterReady] = useState(isPrinterReady());
+  const [logoUploading, setLogoUploading] = useState(false);
   const logoRef = useRef<HTMLInputElement>(null);
 
   const saveBusiness = () => {
@@ -376,13 +390,19 @@ const AdminNastaveni: React.FC = () => {
     setTimeout(() => setSaved(false), 2000);
   };
 
-  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 500_000) { alert('Logo je příliš velké. Max 500 KB.'); return; }
-    const reader = new FileReader();
-    reader.onload = ev => updateShared({ logo: ev.target?.result as string });
-    reader.readAsDataURL(file);
+    if (file.size > 2_000_000) { alert('Logo max 2 MB'); return; }
+    setLogoUploading(true);
+    try {
+      const url = await uploadLogo(file);
+      updateShared({ logo: url });
+    } catch (err) {
+      alert('Chyba uploadu: ' + (err as Error).message);
+    } finally {
+      setLogoUploading(false);
+    }
   };
 
   const handlePrinterSetup = async () => {
@@ -397,28 +417,31 @@ const AdminNastaveni: React.FC = () => {
       <div className="admin-card">
         <h4>🧾 Logo & Účtenka</h4>
 
-        {/* Logo upload */}
-        <div style={{ display: 'flex', gap: 16, alignItems: 'center', marginBottom: 14, padding: 12, background: 'var(--bg-2)', borderRadius: 10, border: '1px solid var(--line)' }}>
+          <div style={{ display: 'flex', gap: 16, alignItems: 'center', marginBottom: 14, padding: 12, background: 'var(--bg-2)', borderRadius: 10, border: '1px solid var(--line)' }}>
           <div
-            style={{ width: 80, height: 80, borderRadius: '50%', overflow: 'hidden', border: '2px solid var(--bronze-dim)', cursor: 'pointer', background: 'radial-gradient(circle at 30% 30%,#F2C46B,#CD7F32)', display: 'grid', placeItems: 'center', flexShrink: 0, fontSize: 36, fontWeight: 900, color: '#1a0e02' }}
-            onClick={() => logoRef.current?.click()}
-            title="Klikni pro nahrání loga"
+            style={{ width: 80, height: 80, borderRadius: '50%', overflow: 'hidden', border: '2px solid var(--bronze-dim)', cursor: logoUploading ? 'wait' : 'pointer', background: 'radial-gradient(circle at 30% 30%,#F2C46B,#CD7F32)', display: 'grid', placeItems: 'center', flexShrink: 0, fontSize: 36, fontWeight: 900, color: '#1a0e02', opacity: logoUploading ? 0.6 : 1 }}
+            onClick={() => !logoUploading && logoRef.current?.click()}
           >
-            {shared.logo
-              ? <img src={shared.logo} alt="logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              : 'O'
+            {logoUploading
+              ? <span style={{ fontSize: 28 }}>⏳</span>
+              : shared.logo
+                ? <img src={shared.logo} alt="logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                : 'O'
             }
           </div>
           <div style={{ flex: 1 }}>
             <div style={{ fontWeight: 700, marginBottom: 6 }}>Logo restaurace</div>
-            <div style={{ fontSize: 11, color: 'var(--ink-mute)', marginBottom: 8 }}>Zobrazuje se v TopBaru a na účtence. Max 500 KB, čtvercové.</div>
+            <div style={{ fontSize: 11, color: 'var(--ink-mute)', marginBottom: 8 }}>
+              {logoUploading ? '⏳ Nahrávám do cloudu...' : 'Nahraje se do cloudu — viditelné na všech zařízeních. Max 2 MB.'}
+            </div>
             <div style={{ display: 'flex', gap: 8 }}>
-              <button className="btn" onClick={() => logoRef.current?.click()}>📁 Nahrát logo</button>
-              {shared.logo && <button className="btn danger" onClick={() => updateShared({ logo: null })}>✕ Odebrat</button>}
+              <button className="btn" onClick={() => logoRef.current?.click()} disabled={logoUploading}>📁 Nahrát logo</button>
+              {shared.logo && <button className="btn danger" onClick={() => updateShared({ logo: null })} disabled={logoUploading}>✕ Odebrat</button>}
             </div>
             <input ref={logoRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleLogoUpload} />
           </div>
         </div>
+
 
         {/* Texty na účtence */}
         <div style={{ display: 'grid', gap: 8 }}>
