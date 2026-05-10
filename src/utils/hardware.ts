@@ -20,19 +20,53 @@ import { fmtCZK, nowStamp } from '@/store/posStore';
 export const hasBridge    = (): boolean => !!(window as any).AndroidBridge?.isAvailable?.();
 export const hasWebSerial = (): boolean => 'serial' in navigator;
 
-// Uchovaný serial port pro celou session
+// Uchovaný serial port
 let _port: any = null;
+let _initialized = false;
 
+/**
+ * Zavolej jednou při startu aplikace.
+ * Pokud uživatel už dřív vybral port, Chrome ho vrátí bez jakéhokoli dialogu.
+ */
+export const initPrinter = async (): Promise<void> => {
+  if (_initialized || !hasWebSerial()) return;
+  _initialized = true;
+  try {
+    const ports: any[] = await (navigator as any).serial.getPorts();
+    if (ports.length > 0) {
+      _port = ports[0]; // vezmi první dříve schválený port
+      if (!_port.readable) {
+        await _port.open({ baudRate: 9600 });
+      }
+      console.log('[HW] Printer auto-connected from saved permissions');
+    }
+  } catch (e) {
+    console.warn('[HW] Auto-connect failed:', e);
+    _port = null;
+  }
+};
+
+/** Vybere port — zavolej jen při ručním nastavení z Admin */
 async function getPort(): Promise<any> {
   if (!hasWebSerial()) return null;
+  // Nejdřív zkus uložená oprávnění (bez dialogu)
+  if (!_port) {
+    try {
+      const ports: any[] = await (navigator as any).serial.getPorts();
+      if (ports.length > 0) {
+        _port = ports[0];
+      }
+    } catch {}
+  }
+  if (_port) return _port;
+  // Žádný uložený port — otevři dialog (vyžaduje klik)
   try {
-    if (_port) return _port;
     _port = await (navigator as any).serial.requestPort({ filters: [] });
     return _port;
   } catch {
     return null;
   }
-}
+};
 
 async function writeToPort(data: Uint8Array): Promise<boolean> {
   const port = _port || await getPort();

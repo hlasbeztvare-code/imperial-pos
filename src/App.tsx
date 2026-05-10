@@ -4,6 +4,7 @@ import { PosApp } from './apps/pos/PosApp';
 import { TerminalView } from './components/terminal/TerminalView';
 import { usePosStore } from './store/posStore';
 import { useFirebaseSync } from './hooks/useFirebaseSync';
+import { initPrinter } from './utils/hardware';
 import './styles/imperial.css';
 
 export function App() {
@@ -18,6 +19,11 @@ export function App() {
     document.documentElement.setAttribute('data-theme', theme);
     document.body.style.filter = `brightness(${brightness / 100})`;
   }, [theme, brightness]);
+
+  // Auto-connect to USB printer (no dialog — uses saved Chrome permissions)
+  useEffect(() => {
+    initPrinter();
+  }, []);
 
   return (
     <BrowserRouter>
