@@ -99,8 +99,9 @@ export const MenuGrid: React.FC = () => {
             ? Math.min(...p.variations.map(v => v.price))
             : 0;
 
+          const isDrink = ['cold', 'hot', 'water'].includes(p.cat);
           return (
-            <div key={p.id} className="tile" onClick={() => openPicker(p)}>
+            <div key={p.id} className={`tile${isDrink ? ' sq' : ''}`} onClick={() => openPicker(p)}>
               <div className="photo" style={{ backgroundColor: !hasPhoto ? p.color : undefined }}>
                 {!hasPhoto && (
                   <svg viewBox="0 0 100 100" preserveAspectRatio="none">

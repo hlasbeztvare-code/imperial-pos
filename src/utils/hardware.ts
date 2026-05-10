@@ -169,7 +169,7 @@ function buildHtml(p: PrintReceiptParams): string {
   };
 
   const logoHtml = p.logo
-    ? `<img src="${p.logo}" alt="logo" style="width:80px;height:80px;object-fit:contain;border-radius:50%;margin-bottom:8px">`
+    ? `<img src="${p.logo}" alt="logo" style="width:100%;max-width:180px;aspect-ratio:9/16;object-fit:contain;border-radius:8px;display:block;margin:0 auto 8px">`
     : `<div style="width:64px;height:64px;border-radius:50%;background:radial-gradient(circle at 30% 30%,#F2C46B,#CD7F32);display:inline-flex;align-items:center;justify-content:center;font-size:30px;font-weight:900;color:#1a0e02;margin-bottom:8px">O</div>`;
 
   return `
