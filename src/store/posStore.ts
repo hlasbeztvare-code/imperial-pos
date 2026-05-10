@@ -289,6 +289,18 @@ export const useSharedStore = create<SharedStore>()(
     }),
     {
       name: 'osman_shared_v3',
+      // Merge: nová pole ze defaults se zachovají i při upgrade ze staré verze
+      merge: (persisted: unknown, current: SharedStore): SharedStore => {
+        const p = persisted as Partial<SharedStore> | null;
+        return {
+          ...current,
+          shared: {
+            ...defaultSharedState(),          // výchozí hodnoty pro nová pole
+            ...(p?.shared ?? {}),             // přepis uloženými daty
+            pendingPayment: null,             // toto nikdy nepersistovat
+          },
+        };
+      },
     },
   ),
 );
