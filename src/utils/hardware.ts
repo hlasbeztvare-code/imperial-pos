@@ -190,6 +190,51 @@ export const LCodeNative = {
   }
 };
 
+
+/**
+ * COMPATIBILITY LAYER
+ * These functions map the old API to the new unified LCodeNative bridge.
+ */
+
+export const initPrinter = () => {
+  console.log('[Hardware] initPrinter (legacy call)');
+  // Handled by hooks now
+};
+
+export const setupPrinter = async () => {
+  console.log('[Hardware] setupPrinter (legacy call)');
+  LCodeNative.reconnect();
+  return true;
+};
+
+export const isPrinterReady = () => {
+  // We can't know for sure synchronously, but we return true to keep UI happy
+  return true; 
+};
+
+export const openCashDrawer = () => {
+  LCodeNative.openDrawer();
+};
+
+export const printReceipt = (p: any) => {
+  // For now, we'll just send a simplified text version to the native bridge
+  // In a real scenario, we would use an ESC/POS builder here.
+  const receiptText = `
+    ${p.tableLabel}
+    --------------------------------
+    ${p.cart.map((item: any) => `${item.qty}x ${item.name} ... ${item.unitPrice * item.qty} Kč`).join('\n')}
+    --------------------------------
+    CELKEM: ${p.totals.grand} Kč
+    --------------------------------
+    Děkujeme za návštěvu!
+    ${p.business.name}
+  `;
+  
+  // Convert text to Base64 for the native bridge
+  const base64 = typeof window !== 'undefined' ? window.btoa(unescape(encodeURIComponent(receiptText))) : '';
+  LCodeNative.print(base64);
+};
+
 // Exporting as 'hardware' for compatibility
 export const hardware = LCodeNative;
 
