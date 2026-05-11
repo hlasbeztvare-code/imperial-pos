@@ -192,7 +192,8 @@ export function defaultSharedState(): SharedState {
     showCustomerPrices: true,
     business: { ...DEFAULT_BUSINESS },
     iban: '',
-    pinCode: '1234',
+    ownerPin: '2022',
+    staffPin: '0000',
     pay: {
       nfcEnabled: true,
       qrEnabled: true,

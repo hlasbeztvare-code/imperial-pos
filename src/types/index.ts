@@ -147,7 +147,8 @@ export interface SharedState {
   showCustomerPrices: boolean;
   business: BusinessInfo;
   iban: string;
-  pinCode: string;
+  ownerPin: string;
+  staffPin: string;
   pay: PaymentConfig;
   schemaVersion: number;
   // Payment terminal sync (Firebase → Android phone)

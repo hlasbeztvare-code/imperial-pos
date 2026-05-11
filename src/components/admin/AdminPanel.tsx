@@ -578,14 +578,25 @@ const AdminNastaveni: React.FC = () => {
         </div>
       </div>
 
-      {/* ── PIN ── */}
+      {/* ── PINY ── */}
       <div className="admin-card">
-        <h4>🔐 PIN kód</h4>
-        <div className="row">
-          <span>Aktuální PIN</span>
-          <input type="password" value={shared.pinCode} maxLength={6}
-            onChange={e => updateShared({ pinCode: e.target.value })}
-            style={{ width: 120, textAlign: 'center', letterSpacing: 8, fontSize: 20 }} />
+        <h4>🔐 PIN kódy</h4>
+        <div style={{ display: 'grid', gap: 10 }}>
+          <div className="row">
+            <span>PIN Majitele (přístup k administraci)</span>
+            <input type="text" value={shared.ownerPin} maxLength={6}
+              onChange={e => updateShared({ ownerPin: e.target.value })}
+              style={{ width: 120, textAlign: 'center', letterSpacing: 4, fontSize: 18, fontWeight: 800 }} />
+          </div>
+          <div className="row">
+            <span>PIN Obsluhy (pouze markování)</span>
+            <input type="text" value={shared.staffPin} maxLength={6}
+              onChange={e => updateShared({ staffPin: e.target.value })}
+              style={{ width: 120, textAlign: 'center', letterSpacing: 4, fontSize: 18, fontWeight: 800 }} />
+          </div>
+        </div>
+        <div style={{ fontSize: 11, color: 'var(--ink-mute)', marginTop: 8 }}>
+          Změna PINu se projeví na všech zařízeních po synchronizaci.
         </div>
       </div>
     </div>

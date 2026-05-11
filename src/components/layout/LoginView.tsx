@@ -6,12 +6,13 @@ import '@/styles/imperial.css';
 
 export const LoginView: React.FC = () => {
   const setUser = usePosStore(s => s.setUser);
-  const logo = useSharedStore(s => s.shared.logo);
+  const shared = useSharedStore(s => s.shared);
+  const logo = shared.logo;
   const showToast = usePosStore(s => s.showToast);
   
   const [pin, setPin] = useState('');
-  const MASTER_PIN = '2022';
-  const STAFF_PIN = '0000';
+  const MASTER_PIN = shared.ownerPin || '2022';
+  const STAFF_PIN = shared.staffPin || '0000';
 
   const handleKey = (key: string) => {
     if (pin.length < 4) {
