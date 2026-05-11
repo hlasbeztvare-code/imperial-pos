@@ -826,3 +826,95 @@ main { display: grid; grid-template-columns: 1fr 380px; min-height: 0; height: 1
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-10px); }
 }
+
+/* ===================== RESPONSIVE DESIGN ===================== */
+
+.mobile-only { display: none !important; }
+
+@media (max-width: 1024px) {
+  main { grid-template-columns: 1fr 340px; }
+  .brand { min-width: auto; }
+}
+
+@media (max-width: 850px) {
+  .mobile-only { display: grid !important; }
+  
+  #root { grid-template-rows: auto 1fr auto; }
+  
+  header.topbar { padding: 10px; flex-wrap: wrap; height: auto; min-height: 54px; }
+  .brand { min-width: 0; flex: 1; }
+  .crumbs { display: none; }
+  .clock { display: none; }
+  
+  main { grid-template-columns: 1fr; }
+  
+  /* Workspace / Sidebar */
+  .workspace { border-right: 0; }
+  
+  aside {
+    position: fixed;
+    top: 54px;
+    bottom: 36px;
+    right: -100%;
+    width: 100%;
+    z-index: 50;
+    background: var(--bg-2);
+    transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: -10px 0 30px rgba(0,0,0,0.5);
+    border-left: 1px solid var(--line);
+  }
+  
+  aside.mobile-visible {
+    right: 0;
+  }
+  
+  .grid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 8px;
+    padding: 8px;
+  }
+  
+  .tile .nm { font-size: 11px; }
+  .tile .price { font-size: 12px; }
+  
+  footer.statusbar {
+    height: auto;
+    min-height: 36px;
+    padding: 4px 10px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  
+  .stat { font-size: 10px; }
+  .stat b { display: none; }
+  
+  /* Modals */
+  .modal { width: 95vw !important; max-height: 95vh; }
+  .var-grid { grid-template-columns: 1fr; }
+  .pay-methods { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 480px) {
+  .grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  
+  .topbar .name b { font-size: 11px; }
+  .topbar .name span { font-size: 8px; }
+  
+  .tab { font-size: 10px; padding: 10px 4px; }
+  
+  .btn { padding: 8px 12px; font-size: 10px; }
+}
+
+/* Fix for stretched tiles */
+.tile .photo {
+  aspect-ratio: 4 / 3;
+  width: 100%;
+}
+.tile.sq .photo {
+  aspect-ratio: 1 / 1;
+}
+.tile .photo img, .tile .photo svg {
+  width: 100%; height: 100%; object-fit: cover;
+}

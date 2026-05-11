@@ -6,9 +6,10 @@ import { StatusBar } from './StatusBar';
 export const Shell: React.FC<{ children: React.ReactNode; aside?: React.ReactNode }> = ({ children, aside }) => {
   const activePanel = usePosStore(s => s.activePanel);
   const setActivePanel = usePosStore(s => s.setActivePanel);
+  const showMobileCart = usePosStore(s => s.showMobileCart);
 
   return (
-    <div id="root">
+    <div id="root" className={showMobileCart ? 'show-mobile-cart' : ''}>
       <TopBar />
       <main>
         <section className="workspace">
@@ -19,7 +20,9 @@ export const Shell: React.FC<{ children: React.ReactNode; aside?: React.ReactNod
           </div>
           {children}
         </section>
-        {aside}
+        <aside className={showMobileCart ? 'mobile-visible' : ''}>
+          {aside}
+        </aside>
       </main>
       <StatusBar />
     </div>

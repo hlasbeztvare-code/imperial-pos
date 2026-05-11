@@ -69,6 +69,7 @@ interface PosState {
   brightness: number;
   activeCat: string;
   activePanel: 'floor' | 'menu' | 'orders';
+  showMobileCart: boolean;
 
   // Session
   receiptSeq: number;
@@ -107,6 +108,7 @@ interface PosState {
   addAudit: (action: string, details?: string) => void;
   showToast: (msg: string, kind?: 'ok' | 'err' | '') => void;
   setCloudSyncStatus: (s: 'synced' | 'syncing' | 'error' | 'offline') => void;
+  setShowMobileCart: (show: boolean) => void;
   resetDay: () => void;
 }
 
@@ -122,6 +124,7 @@ export const usePosStore = create<PosState>()(
       brightness: 100,
       activeCat: 'all',
       activePanel: 'floor',
+      showMobileCart: false,
       receiptSeq: 9,
       todayRevenue: 0,
       ordersDone: 0,
@@ -217,6 +220,8 @@ export const usePosStore = create<PosState>()(
       },
 
       setCloudSyncStatus: (s) => set({ cloudSyncStatus: s }),
+
+      setShowMobileCart: (show) => set({ showMobileCart: show }),
 
       resetDay: () => set({ todayRevenue: 0, ordersDone: 0, receiptSeq: 9 }),
     }),

@@ -11,6 +11,13 @@ export const TopBar: React.FC = () => {
   );
   const activePanel = usePosStore(s => s.activePanel);
   const session = usePosStore(s => s.ordersDone + 1);
+  const showMobileCart = usePosStore(s => s.showMobileCart);
+  const setShowMobileCart = usePosStore(s => s.setShowMobileCart);
+  const cartItemsCount = useSharedStore(s => {
+    // Sum items across all tables? No, just the active one?
+    // Actually, let's just show a generic count or just an icon.
+    return Object.values(s.shared.tables).reduce((sum, t) => sum + t.items.length, 0);
+  });
   const { business, logo } = useSharedStore(s => s.shared);
 
   const [adminOpen, setAdminOpen] = useState(false);
@@ -58,6 +65,9 @@ export const TopBar: React.FC = () => {
         </div>
         <button className="theme-btn" onClick={toggleTheme} title="Změnit téma">
           {theme === 'dark' ? '☀' : '☾'}
+        </button>
+        <button className={`icon-btn mobile-only ${showMobileCart ? 'active' : ''}`} onClick={() => setShowMobileCart(!showMobileCart)} title="Košík">
+          🛒
         </button>
         <button className="icon-btn" onClick={() => setAdminOpen(true)} title="Administrace">
           ⚙
