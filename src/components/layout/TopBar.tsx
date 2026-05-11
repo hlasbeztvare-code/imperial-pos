@@ -13,11 +13,6 @@ export const TopBar: React.FC = () => {
   const session = usePosStore(s => s.ordersDone + 1);
   const showMobileCart = usePosStore(s => s.showMobileCart);
   const setShowMobileCart = usePosStore(s => s.setShowMobileCart);
-  const cartItemsCount = useSharedStore(s => {
-    // Sum items across all tables? No, just the active one?
-    // Actually, let's just show a generic count or just an icon.
-    return Object.values(s.shared.tables).reduce((sum, t) => sum + t.items.length, 0);
-  });
   const { business, logo } = useSharedStore(s => s.shared);
 
   const [adminOpen, setAdminOpen] = useState(false);
