@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { useSharedStore } from '@/store/posStore';
+import { useSharedStore, usePosStore } from '@/store/posStore';
 import { initFirebase, subscribeShared, pushShared } from '@/firebase/config';
 import type { SharedState } from '@/types';
 
@@ -11,6 +11,7 @@ import type { SharedState } from '@/types';
 export function useFirebaseSync() {
   const shared = useSharedStore(s => s.shared);
   const setShared = useSharedStore(s => s.setShared);
+  const setSyncStatus = usePosStore(s => s.setCloudSyncStatus);
   const lastRemoteRef = useRef<string>('');
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -38,9 +39,15 @@ export function useFirebaseSync() {
     if (localJson === lastRemoteRef.current) return;
 
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => {
+    setSyncStatus('syncing');
+    debounceRef.current = setTimeout(async () => {
       lastRemoteRef.current = localJson;
-      pushShared(shared);
+      try {
+        await pushShared(shared);
+        setSyncStatus('synced');
+      } catch {
+        setSyncStatus('error');
+      }
     }, 500);
 
     return () => {

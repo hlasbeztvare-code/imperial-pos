@@ -9,6 +9,7 @@ export const StatusBar: React.FC = () => {
   const nfcConnected = usePosStore(s => s.nfcConnected);
   const todayRevenue = usePosStore(s => s.todayRevenue);
   const ordersDone = usePosStore(s => s.ordersDone);
+  const cloudSyncStatus = usePosStore(s => s.cloudSyncStatus);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
 
   useEffect(() => {
@@ -27,6 +28,18 @@ export const StatusBar: React.FC = () => {
       <div className="stat">
         <i className={`dot ${isOnline ? 'ok' : 'warn'}`}></i>
         <b>Síť</b> <span>{isOnline ? 'Online' : 'Offline'}</span>
+      </div>
+      <div className="stat">
+        <i className={`dot ${
+          cloudSyncStatus === 'synced' ? 'ok' : 
+          cloudSyncStatus === 'syncing' ? 'warn pulse' : 
+          'bad'
+        }`}></i>
+        <b>Cloud</b> <span>{
+          cloudSyncStatus === 'synced' ? 'Synchronizováno' : 
+          cloudSyncStatus === 'syncing' ? 'Ukládám...' : 
+          'Chyba zápisu'
+        }</span>
       </div>
       <div className="stat">
         <i className={`dot ${hwStatus.connected ? 'ok' : 'bad'}`}></i>

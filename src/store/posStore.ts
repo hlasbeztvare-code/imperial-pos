@@ -80,6 +80,9 @@ interface PosState {
   displayConnected: boolean;
   nfcConnected: boolean;
 
+  // Sync
+  cloudSyncStatus: 'synced' | 'syncing' | 'error' | 'offline';
+
   // Toast
   toast: { msg: string; kind: 'ok' | 'err' | '' } | null;
 
@@ -103,6 +106,7 @@ interface PosState {
   completePayment: (tid: string, amount: number) => void;
   addAudit: (action: string, details?: string) => void;
   showToast: (msg: string, kind?: 'ok' | 'err' | '') => void;
+  setCloudSyncStatus: (s: 'synced' | 'syncing' | 'error' | 'offline') => void;
   resetDay: () => void;
 }
 
@@ -124,6 +128,7 @@ export const usePosStore = create<PosState>()(
       audit: [],
       displayConnected: false,
       nfcConnected: false,
+      cloudSyncStatus: 'synced',
       toast: null,
       user: null,
 
@@ -210,6 +215,8 @@ export const usePosStore = create<PosState>()(
         set({ toast: { msg, kind } });
         setTimeout(() => set({ toast: null }), 2200);
       },
+
+      setCloudSyncStatus: (s) => set({ cloudSyncStatus: s }),
 
       resetDay: () => set({ todayRevenue: 0, ordersDone: 0, receiptSeq: 9 }),
     }),
