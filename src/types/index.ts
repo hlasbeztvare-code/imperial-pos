@@ -186,6 +186,7 @@ export interface AuthUser {
   displayName: string;
   idToken: string;
   photoUrl?: string;
+  role?: 'owner' | 'staff';
 }
 
 // ---- Hardware Bridge (APK) ----

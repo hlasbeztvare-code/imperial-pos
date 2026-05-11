@@ -8,6 +8,25 @@ type AdminTab = 'katalog' | 'kategorie' | 'prehled' | 'nastaveni';
 
 export const AdminPanel: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const [tab, setTab] = useState<AdminTab>('katalog');
+  const user = usePosStore(s => s.user);
+
+  if (user?.role !== 'owner') {
+    return (
+      <div className="overlay" onClick={onClose}>
+        <div className="modal narrow" onClick={e => e.stopPropagation()}>
+          <div className="modal-head">
+            <h3>⛔ Přístup odepřen</h3>
+            <button className="close" onClick={onClose}>✕</button>
+          </div>
+          <div className="modal-body" style={{ textAlign: 'center', padding: '40px 20px' }}>
+            <div style={{ fontSize: '40px', marginBottom: '16px' }}>🔒</div>
+            <p>Do administrace má přístup pouze **Majitel** po zadání PIN kódu.</p>
+            <button className="btn primary" onClick={onClose} style={{ marginTop: '20px', width: '100%' }}>Rozumím</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="overlay" onClick={onClose}>
@@ -329,30 +348,45 @@ const AdminKategorie: React.FC = () => {
 const AdminPrehled: React.FC = () => {
   const todayRevenue = usePosStore(s => s.todayRevenue);
   const ordersDone   = usePosStore(s => s.ordersDone);
-  const receiptSeq   = usePosStore(s => s.receiptSeq);
   const audit        = usePosStore(s => s.audit);
   const resetDay     = usePosStore(s => s.resetDay);
   const brightness   = usePosStore(s => s.brightness);
   const setBrightness = usePosStore(s => s.setBrightness);
+
+  const avgOrder = ordersDone > 0 ? todayRevenue / ordersDone : 0;
+  const vat12 = todayRevenue * 0.1071; // Approximate for 12%
+  const net = todayRevenue - vat12;
 
   return (
     <div style={{ display: 'grid', gap: 14 }}>
       <div className="admin-grid">
         <div className="admin-card">
           <h4>📊 Dnešní tržby</h4>
-          <div className="row"><span>Tržba</span><b>{fmtCZK(todayRevenue)}</b></div>
-          <div className="row"><span>Účtenek</span><b>{ordersDone}</b></div>
-          <div className="row"><span>Příští č.</span><b>#{receiptSeq + 1}</b></div>
-          <button className="btn danger" style={{ marginTop: 10, width: '100%' }}
-            onClick={() => { if (confirm('Opravdu resetovat den?')) resetDay(); }}>
-            🔄 Reset dne
+          <div className="row" style={{ fontSize: '20px', marginBottom: '10px' }}>
+            <span>CELKEM</span>
+            <b style={{ color: 'var(--ok)' }}>{fmtCZK(todayRevenue)}</b>
+          </div>
+          <div className="row"><span>Počet účtenek</span><b>{ordersDone}</b></div>
+          <div className="row"><span>Průměr / účtenka</span><b>{fmtCZK(avgOrder)}</b></div>
+          <div className="row"><span>Základ daně (odhad)</span><b>{fmtCZK(net)}</b></div>
+          <div className="row"><span>DPH 12% (odhad)</span><b>{fmtCZK(vat12)}</b></div>
+          
+          <button className="btn danger" style={{ marginTop: 20, width: '100%' }}
+            onClick={() => { if (confirm('Opravdu resetovat dnešní tržby?')) resetDay(); }}>
+            🔄 Resetovat denní přehled
           </button>
         </div>
+
         <div className="admin-card">
-          <h4>🔆 Jas displeje</h4>
-          <div className="row"><span>Jas</span><b>{brightness}%</b></div>
+          <h4>🔅 Hardware & Jas</h4>
+          <div className="row"><span>Jas displeje</span><b>{brightness}%</b></div>
           <input type="range" min={30} max={100} value={brightness} className="bri-slider"
             onChange={e => setBrightness(Number(e.target.value))} />
+          <div style={{ marginTop: '15px' }}>
+            <button className="btn" style={{ width: '100%' }} onClick={setupPrinter}>
+              🔌 Re-link Tiskárnu
+            </button>
+          </div>
         </div>
       </div>
       <div className="admin-card">

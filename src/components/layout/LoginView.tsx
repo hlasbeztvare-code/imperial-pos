@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { usePosStore } from '@/store/posStore';
 import { useSharedStore } from '@/store/posStore';
 import { LCodeNative } from '@/utils/hardware';
@@ -8,20 +8,47 @@ export const LoginView: React.FC = () => {
   const setUser = usePosStore(s => s.setUser);
   const logo = useSharedStore(s => s.shared.logo);
   const showToast = usePosStore(s => s.showToast);
+  
+  const [pin, setPin] = useState('');
+  const MASTER_PIN = '2022';
+  const STAFF_PIN = '0000';
 
-  const handleGoogleLogin = () => {
-    LCodeNative.signInWithGoogle(
-      (user) => {
-        setUser(user);
-        showToast(`Vítejte, ${user.displayName}`, 'ok');
-      },
-      (err) => {
-        showToast(`Chyba přihlášení: ${err}`, 'err');
+  const handleKey = (key: string) => {
+    if (pin.length < 4) {
+      const newPin = pin + key;
+      setPin(newPin);
+      
+      if (newPin === MASTER_PIN) {
+        setTimeout(() => {
+          setUser({
+            email: 'majitel@imperial.pos',
+            displayName: 'Majitel',
+            idToken: 'owner-token',
+            role: 'owner',
+            photoUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Imperial'
+          });
+          showToast('Vítejte v systému, pane majiteli', 'ok');
+        }, 300);
+      } else if (newPin === STAFF_PIN) {
+        setTimeout(() => {
+          setUser({
+            email: 'obsluha@imperial.pos',
+            displayName: 'Obsluha',
+            idToken: 'staff-token',
+            role: 'staff',
+            photoUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Staff'
+          });
+          showToast('Vítejte v systému', 'ok');
+        }, 300);
+      } else if (newPin.length === 4) {
+        setTimeout(() => {
+          showToast('Nesprávný PIN', 'err');
+          setPin('');
+        }, 300);
       }
-    );
+    }
   };
 
-  // If not native, we might want a fallback or just a message
   const isNative = LCodeNative.getPlatform() !== 'web';
 
   return (
@@ -39,51 +66,45 @@ export const LoginView: React.FC = () => {
           {logo ? (
             <img src={logo} alt="Gasaan Logo" className="login-logo-main" />
           ) : (
-            <div className="login-logo-placeholder">GASAAN POS</div>
+            <div className="login-logo-placeholder">IMPERIAL</div>
           )}
         </div>
 
         <div className="login-card glass">
-          <h1>Gasaan POS</h1>
-          <p className="login-subtitle">Prémiový pokladní systém</p>
+          <h1>Imperial POS</h1>
+          <p className="login-subtitle">Zadejte PIN pro přístup</p>
           
-          <button 
-            className="btn btn-primary login-google-btn"
-            onClick={handleGoogleLogin}
-          >
-            <img 
-              src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" 
-              alt="Google" 
-              className="google-icon"
-            />
-            <span>Přihlásit se přes Google</span>
-          </button>
+          <div className="pin-display">
+            {pin.padEnd(4, '·').split('').map((char, i) => (
+              <span key={i} className={pin[i] ? 'typed' : ''}>{char}</span>
+            ))}
+          </div>
 
-          <button 
-            className="btn btn-secondary login-demo-btn"
-            style={{ marginTop: '1rem', width: '100%', opacity: 0.8 }}
-            onClick={() => {
-              setUser({
-                email: 'demo@osman.pos',
-                displayName: 'Chef Osman (DEMO)',
-                idToken: 'demo-mode',
-                photoUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Osman'
-              });
-              showToast('Spuštěno v DEMO režimu', 'ok');
-            }}
-          >
-            <span>Vstoupit jako DEMO</span>
-          </button>
+          <div className="pin-pad">
+            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 'C', 0, '←'].map(key => (
+              <button 
+                key={key} 
+                onClick={() => {
+                  if (key === 'C') setPin('');
+                  else if (key === '←') setPin(pin.slice(0, -1));
+                  else handleKey(String(key));
+                }}
+                className={typeof key === 'string' ? 'util' : ''}
+              >
+                {key}
+              </button>
+            ))}
+          </div>
 
           {!isNative && (
             <p className="login-warning">
-              Spuštěno v prohlížeči. Pro plnou funkčnost (tisk, šuplík) použijte Gasaan APK.
+              Pro plnou funkčnost hardwaru (tisk, šuplík) použijte nativní aplikaci.
             </p>
           )}
 
           <div className="login-footer">
-            <span>CHEF OSMAN EDITION</span>
-            <span className="version">v1.0.4</span>
+            <span>IMPERIAL EDITION</span>
+            <span className="version">v1.0.5</span>
           </div>
         </div>
       </div>
