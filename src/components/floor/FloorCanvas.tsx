@@ -125,12 +125,15 @@ export const FloorCanvas: React.FC = () => {
             </button>
           </>
         )}
-        <button
-          className={`tool-btn ${edit ? 'on' : ''}`}
-          onClick={() => usePosStore.getState().setEdit(!edit)}
-        >
-          ✏️ Upravit
-        </button>
+        <div className="spacer"></div>
+        {usePosStore.getState().user?.role === 'owner' && (
+          <button
+            className={`tool-btn ${edit ? 'on' : ''}`}
+            onClick={() => usePosStore.getState().setEdit(!edit)}
+          >
+            ✏️ Upravit
+          </button>
+        )}
       </div>
 
       {/* Responsive canvas — fills all remaining space */}
