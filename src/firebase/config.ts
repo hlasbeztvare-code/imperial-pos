@@ -1,6 +1,7 @@
 import { initializeApp, getApps } from 'firebase/app';
 import { getDatabase, ref, onValue, set as fbSet, get as fbGet } from 'firebase/database';
 import { getStorage, ref as storageRef, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
+import { getAuth, GoogleAuthProvider, signInWithCredential } from 'firebase/auth';
 import type { SharedState } from '@/types';
 
 /* ============================================================
@@ -20,6 +21,7 @@ const firebaseConfig = {
 let app: ReturnType<typeof initializeApp> | null = null;
 let db: ReturnType<typeof getDatabase> | null = null;
 let storage: ReturnType<typeof getStorage> | null = null;
+let auth: ReturnType<typeof getAuth> | null = null;
 
 export function initFirebase() {
   if (app) return db!;
@@ -27,6 +29,7 @@ export function initFirebase() {
     app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
     db = getDatabase(app);
     storage = getStorage(app);
+    auth = getAuth(app);
     return db;
   } catch (e) {
     console.warn('[Firebase] Init failed — offline mode:', e);
@@ -36,6 +39,18 @@ export function initFirebase() {
 
 export const getDb      = () => db;
 export const getStorage_ = () => storage;
+export const getAuth_   = () => auth;
+
+/**
+ * Signs in to Firebase using the ID token provided by the native Android/iOS bridge.
+ */
+export async function signInWithNativeToken(idToken: string) {
+  const a = getAuth_();
+  if (!a) throw new Error('Firebase Auth not initialized');
+  
+  const credential = GoogleAuthProvider.credential(idToken);
+  return await signInWithCredential(a, credential);
+}
 
 /* ============================================================
    REALTIME DATABASE — Shared state sync

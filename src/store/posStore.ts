@@ -83,6 +83,10 @@ interface PosState {
   // Toast
   toast: { msg: string; kind: 'ok' | 'err' | '' } | null;
 
+  // Auth
+  user: import('@/types').AuthUser | null;
+  setUser: (u: import('@/types').AuthUser | null) => void;
+
   // Actions
   setActiveTable: (id: string | null) => void;
   setEdit: (on: boolean) => void;
@@ -121,7 +125,9 @@ export const usePosStore = create<PosState>()(
       displayConnected: false,
       nfcConnected: false,
       toast: null,
+      user: null,
 
+      setUser: (u) => set({ user: u }),
       setActiveTable: (id) => set({ activeTable: id }),
       setEdit: (on) => set({ edit: on }),
       setSnap: (on) => set({ snap: on }),
@@ -172,17 +178,27 @@ export const usePosStore = create<PosState>()(
         return { discounts: { ...s.discounts, [tid]: disc } };
       }),
 
-      completePayment: (tid, amount) => set(s => {
-        const { [tid]: _, ...restC } = s.carts;
-        const { [tid]: _d, ...restD } = s.discounts;
-        return {
-          carts: restC,
-          discounts: restD,
-          receiptSeq: s.receiptSeq + 1,
-          todayRevenue: s.todayRevenue + amount,
-          ordersDone: s.ordersDone + 1,
-        };
-      }),
+      completePayment: (tid, amount) => {
+        // Trigger hardware drawer opening if native bridge is present
+        try {
+          const { hardware } = require('@/utils/hardware');
+          if (hardware.isNative()) hardware.openDrawer();
+        } catch (e) {
+          console.error('Hardware drawer failed', e);
+        }
+
+        set(s => {
+          const { [tid]: _, ...restC } = s.carts;
+          const { [tid]: _d, ...restD } = s.discounts;
+          return {
+            carts: restC,
+            discounts: restD,
+            receiptSeq: s.receiptSeq + 1,
+            todayRevenue: s.todayRevenue + amount,
+            ordersDone: s.ordersDone + 1,
+          };
+        });
+      },
 
       addAudit: (action, details = '') => set(s => {
         const entry: AuditEntry = { t: nowStamp(), a: action, d: details };
@@ -209,6 +225,7 @@ export const usePosStore = create<PosState>()(
         theme: s.theme,
         brightness: s.brightness,
         snap: s.snap,
+        user: s.user,
       }),
     },
   ),

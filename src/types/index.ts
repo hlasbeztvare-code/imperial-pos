@@ -179,6 +179,15 @@ export interface LocalState {
   nfcConnected: boolean;
 }
 
+// ---- Auth ----
+
+export interface AuthUser {
+  email: string;
+  displayName: string;
+  idToken: string;
+  photoUrl?: string;
+}
+
 // ---- Hardware Bridge (APK) ----
 
 export interface AndroidBridge {
@@ -190,5 +199,9 @@ export interface AndroidBridge {
 declare global {
   interface Window {
     AndroidBridge?: AndroidBridge;
+    LCodeNative?: any;
+    LCodeHardware?: any;
+    LCodeAuth?: any;
   }
 }
+

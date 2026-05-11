@@ -1,4 +1,5 @@
 import type { Product, Category, TableConfig, BusinessInfo, SharedState } from '@/types';
+import { LOGO_BASE64 } from '@/assets/logo-base64';
 
 /* ===== BUSINESS DEFAULTS ===== */
 export const DEFAULT_BUSINESS: BusinessInfo = {
@@ -184,7 +185,7 @@ export function defaultSharedState(): SharedState {
     tables: defaultTables(),
     photos: {},
     catPhotos: {},
-    logo: null,
+    logo: LOGO_BASE64,
     slideshow: [],
     welcomeMsg: 'Vítejte u Chef Osman — Crispy Shawarma!',
     thanksMsg: 'Děkujeme Vám a přejeme dobrou chuť!',
