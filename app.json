@@ -1,0 +1,42 @@
+{
+  "expo": {
+    "name": "Imperial POS",
+    "slug": "imperial-pos",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#000000"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.lucky88888.imperialpos",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSBluetoothAlwaysUsageDescription": "Imperial POS needs Bluetooth to connect to thermal printers.",
+        "NSLocalNetworkUsageDescription": "Imperial POS needs local network access to find LAN printers."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#000000"
+      },
+      "package": "com.lucky88888.imperialpos"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "81f749df-5ebd-4d6c-a0a4-b22f598e2a86"
+      }
+    }
+  }
+}
