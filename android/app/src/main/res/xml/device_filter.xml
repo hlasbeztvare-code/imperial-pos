@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Generic ESC/POS Printer Filter -->
+    <!-- Class 7 is Printers -->
+    <usb-device class="7" />
+    
+    <!-- Optional: Add specific VID/PID if known -->
+    <!-- <usb-device vendor-id="1155" product-id="22304" /> -->
+</resources>

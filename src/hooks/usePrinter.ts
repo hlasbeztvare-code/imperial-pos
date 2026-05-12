@@ -2,33 +2,22 @@
  * usePrinter — Silent print via Android APK bridge.
  * Falls back to window.print() in non-APK environments.
  */
+import { LCodeNative } from '../utils/hardware';
+
 export function usePrinter() {
   const print = (receiptHtml: string) => {
-    if (window.AndroidBridge?.print) {
-      // Direct APK bridge — no system dialog
-      window.AndroidBridge.print(receiptHtml);
-    } else {
-      // Fallback: browser print
-      const printWindow = window.open('', '_blank', 'width=400,height=600');
-      if (printWindow) {
-        printWindow.document.write(`
-          <!DOCTYPE html>
-          <html><head>
-            <style>
-              body { font-family: 'Inter', sans-serif; margin: 0; padding: 0; }
-              @media print { body { margin: 0; } }
-            </style>
-          </head><body>${receiptHtml}</body></html>
-        `);
-        printWindow.document.close();
-        printWindow.print();
-        setTimeout(() => printWindow.close(), 1000);
-      }
-    }
+    // Convert HTML to simple text or ESC/POS (handled by LCodeNative for now)
+    // In a real scenario, we'd pass a more structured object or raw ESC/POS
+    console.log('[usePrinter] Dispatching print to LCodeNative');
+    
+    // We pass the raw HTML or a placeholder depending on what LCodeNative.print expects
+    // LCodeNative.print currently takes (data, signature)
+    LCodeNative.print(receiptHtml);
   };
 
-  const isAvailable = (): boolean => {
-    return !!(window.AndroidBridge?.isAvailable?.());
+  const isAvailable = async (): Promise<boolean> => {
+    const status = await LCodeNative.getStatus();
+    return status.connected;
   };
 
   return { print, isAvailable };
