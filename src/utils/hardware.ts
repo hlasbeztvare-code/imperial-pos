@@ -15,92 +15,18 @@ export interface DeviceStatus {
   error?: string;
 }
 
-export interface AuthUser {
-  email: string;
-  displayName: string;
-  idToken: string;
-  photoUrl?: string;
-}
-
 /**
  * LCodeNative - The Unified API Layer
  */
 export const LCodeNative = {
-  // Callback storage for Auth
-  authCallbacks: {
-    onSuccess: (user: AuthUser) => {},
-    onFailure: (error: string) => {},
-    onSignOut: () => {},
-  },
-
   /**
    * Detects the current native platform
    */
   getPlatform: (): 'android' | 'ios' | 'web' => {
     if (typeof window === 'undefined') return 'web';
-    if (!!(window as any).LCodeAuth || !!(window as any).LCodeHardware) return 'android';
+    if (!!(window as any).LCodeHardware) return 'android';
     if (!!(window as any).webkit?.messageHandlers?.LCodeHardware) return 'ios';
     return 'web';
-  },
-
-  /**
-   * Auth: Sign in with Google (Native flow)
-   */
-  signInWithGoogle: (onSuccess: (user: AuthUser) => void, onFailure: (err: string) => void) => {
-    const platform = LCodeNative.getPlatform();
-    LCodeNative.authCallbacks.onSuccess = onSuccess;
-    LCodeNative.authCallbacks.onFailure = onFailure;
-
-    if (platform === 'android' && (window as any).LCodeAuth) {
-      (window as any).LCodeAuth.signIn();
-    } else if (platform === 'ios') {
-      // Future iOS Implementation
-      onFailure('iOS Google Sign-In not implemented yet');
-    } else {
-      onFailure('Native Auth not available');
-    }
-  },
-
-  /**
-   * Auth: Sign out
-   */
-  signOut: () => {
-    const platform = LCodeNative.getPlatform();
-    if (platform === 'android' && (window as any).LCodeAuth) {
-      (window as any).LCodeAuth.signOut();
-    }
-  },
-
-  /**
-   * Internal Callbacks called from Native Bridge
-   */
-  onSignInSuccess: async (user: AuthUser) => {
-    console.log('[LCodeNative] Sign-In Success, linking to Firebase...');
-    try {
-      const { signInWithNativeToken } = await import('@/firebase/config');
-      await signInWithNativeToken(user.idToken);
-      LCodeNative.authCallbacks.onSuccess(user);
-    } catch (e) {
-      console.error('[LCodeNative] Firebase link failed:', e);
-      LCodeNative.authCallbacks.onFailure(String(e));
-    }
-  },
-
-  onSignInFailure: (error: string) => {
-    console.error('[LCodeNative] Sign-In Failure:', error);
-    LCodeNative.authCallbacks.onFailure(error);
-  },
-
-  onSignOut: async () => {
-    console.log('[LCodeNative] Signed Out, clearing Firebase...');
-    try {
-      const { getAuth_ } = await import('@/firebase/config');
-      const auth = getAuth_();
-      if (auth) await auth.signOut();
-    } catch (e) {
-      console.error('[LCodeNative] Firebase signout failed:', e);
-    }
-    LCodeNative.authCallbacks.onSignOut();
   },
 
   /**
